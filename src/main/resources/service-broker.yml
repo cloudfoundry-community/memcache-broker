@@ -1,0 +1,26 @@
+---
+brokerPassword: password
+
+host:
+  local: 10.255.241.193
+  public: auto-scale-service.cf1-dev.lds.org
+  port: 18080
+
+loggregator_endpoint:
+  host: 1.2.3.4
+  shared_secret: loggregator_secret
+
+pidfile: /tmp/auto-scale-broker.pid
+
+logging:
+  level: DEBUG
+
+nats:
+  machines:
+  - nats://nats:password@10.118.216.238:4222
+
+plans:
+  small:
+    name:
+    description:
+    free: 
