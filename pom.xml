@@ -9,7 +9,7 @@
 		<version>1.0.2.RELEASE</version>
 	</parent>
 	<groupId>org.github.cloudfoundry-community</groupId>
-	<artifactId>memcache-service</artifactId>
+	<artifactId>memcache-broker</artifactId>
 	<version>0.1</version>
 	<build>
 		<finalName>${project.artifactId}</finalName>
