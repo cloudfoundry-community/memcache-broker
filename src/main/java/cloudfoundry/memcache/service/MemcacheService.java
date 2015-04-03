@@ -48,13 +48,13 @@ public class MemcacheService {
 	private static final String PLAN_CONFIG_DESCRIPTION_KEY = "description";
 	private static final String PLAN_CONFIG_FREE_KEY = "free";
 	
-	@Value("#{environment['plans']}")
+	@Value("#{config['plans']}")
 	private Map<String, Map<String, Object>> planConfigs;
 
-	@Value("#{environment['memcache']}")
-	private Map<String, String> memcacheConfig;
+	@Value("#{config['memcache']}")
+	private Map<String, Object> memcacheConfig;
 
-	@Value("#{environment['memcache']['servers']}")
+	@Value("#{config['memcache']['servers']}")
 	private List<String> serversConfig;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MemcacheService.class);
@@ -104,7 +104,7 @@ public class MemcacheService {
 	public BindResponse bind(BindRequest bindRequest) {
 		ObjectNode credentials = JsonNodeFactory.instance.objectNode();
 		if(memcacheConfig.containsKey(MEMCACHE_VIP_KEY)) {
-			credentials.put(MEMCACHE_VIP_KEY, memcacheConfig.get(MEMCACHE_VIP_KEY));
+			credentials.put(MEMCACHE_VIP_KEY, (String)memcacheConfig.get(MEMCACHE_VIP_KEY));
 		}
 		credentials.put(MEMCACHE_USERNAME_KEY, generateUsername(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getApplicationGuid()));
 		credentials.put(MEMCACHE_PASSWORD_KEY, generatePassword(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getApplicationGuid()));

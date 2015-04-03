@@ -43,7 +43,7 @@ import ch.qos.logback.classic.LoggerContext;
 @Configuration
 @EnableAutoConfiguration(exclude= {DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class})
 @EnableServiceBroker(password = "#{environment['brokerPassword']}")
-@ComponentScan("org.lds.cloudfoundry.service.autoscale")
+@ComponentScan("cloudfoundry.memcache.service")
 @CfComponent(type = "AutoScaleServiceBroker", host = "#{environment['host.local']}", port = "#{environment['host.port']}")
 public class Main {
 
