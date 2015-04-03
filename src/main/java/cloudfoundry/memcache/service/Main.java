@@ -4,15 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import loggregator.Emitter;
-import loggregator.EmitterBuilder;
 import nats.client.Nats;
 import nats.client.spring.NatsBuilder;
 
-import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -34,7 +30,6 @@ import cf.nats.CfNats;
 import cf.nats.DefaultCfNats;
 import cf.nats.RouterRegisterHandler;
 import cf.spring.CfComponent;
-import cf.spring.HttpClientFactoryBean;
 import cf.spring.NettyEventLoopGroupFactoryBean;
 import cf.spring.PidFileFactory;
 import cf.spring.config.YamlPropertyContextInitializer;
@@ -114,19 +109,6 @@ public class Main {
 		);
 	}
 
-	@Bean
-	FactoryBean<HttpClient> httpClient() {
-		return new HttpClientFactoryBean();
-	}
-
-	@Bean
-	Emitter emitter(
-			@Value("${loggregator_endpoint.host}") String host,
-			@Value("${loggregator_endpoint.port:3456}") int port,
-			@Value("${loggregator_endpoint.shared_secret}") String secret) {
-		return new EmitterBuilder(host, port, secret).sourceName("SCALE").build();
-	}
-
 	public static void main(String[] args) {
 		final SpringApplication springApplication = new SpringApplication(Main.class);
 		springApplication.addInitializers(new YamlPropertyContextInitializer(
@@ -139,7 +121,7 @@ public class Main {
 		final Level level = Level.toLevel(applicationContext.getEnvironment().getProperty("logging.level"), Level.INFO);
 		loggerContext.getLogger("ROOT").setLevel(level);
 
-		LOGGER.info("Auto Scale service broker started");
+		LOGGER.info("Memcache service broker started");
 	}
 
 }

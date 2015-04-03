@@ -3,14 +3,10 @@ brokerPassword: password
 
 host:
   local: 10.255.241.193
-  public: auto-scale-service.cf1-dev.lds.org
-  port: 18080
+  public: memcache-service.cf1-dev.lds.org
+  port: 21080
 
-loggregator_endpoint:
-  host: 1.2.3.4
-  shared_secret: loggregator_secret
-
-pidfile: /tmp/auto-scale-broker.pid
+pidfile: /tmp/memcache-broker.pid
 
 logging:
   level: DEBUG
@@ -19,8 +15,17 @@ nats:
   machines:
   - nats://nats:password@10.118.216.238:4222
 
+memcache:
+  srv_url: https://memcache-hazelcast.cf1-dev.lds.org
+  username: hazelcast-user
+  password: password
+  vip: 10.118.216.239:11211
+  secret_key: secret
+  servers:
+  - 10.118.216.239:11211
+
 plans:
   small:
-    name:
-    description:
-    free: 
+    name: small
+    description: A small cache with no redundency
+    free: false
