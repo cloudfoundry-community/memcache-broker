@@ -11,6 +11,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import cf.spring.servicebroker.Bind;
 import cf.spring.servicebroker.BindRequest;
@@ -56,6 +62,15 @@ public class MemcacheService {
 
 	@Value("#{config['memcache']['servers']}")
 	private List<String> serversConfig;
+	
+	@Value("${memcache.srv_url}")
+	private String memcacheSrvUrl;
+
+	@Value("${memcache.username}")
+	private String username;
+
+	@Value("${memcache.password}")
+	private String password;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MemcacheService.class);
 
@@ -98,6 +113,23 @@ public class MemcacheService {
 
 	@Deprovision
 	public void deprovision(DeprovisionRequest request) {
+		String cacheName = generateCacheName(request.getPlanId(), request.getInstanceGuid());
+		RestTemplate template = new RestTemplate();
+		ResponseEntity<String> result = template.exchange(memcacheSrvUrl+"/cache/{cacheName}", HttpMethod.DELETE, new HttpEntity<String>(createBasicAuthHeaders()), String.class, (Map<String, ?>)Collections.singletonMap("cacheName", cacheName));
+		if(result.getStatusCode() != HttpStatus.OK) {
+			throw new RuntimeException("memcache server failed to handle delete request.");
+		}
+	}
+	
+	private HttpHeaders createBasicAuthHeaders() {
+		String plainCreds = username+":"+password;
+		byte[] plainCredsBytes = plainCreds.getBytes();
+		byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+		String base64Creds = new String(base64CredsBytes);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", "Basic " + base64Creds);
+		return headers;
 	}
 
 	@Bind
