@@ -120,7 +120,7 @@ public class MemcacheService {
 			throw new RuntimeException("memcache server failed to handle delete request.");
 		}
 	}
-	
+
 	private HttpHeaders createBasicAuthHeaders() {
 		String plainCreds = username+":"+password;
 		byte[] plainCredsBytes = plainCreds.getBytes();
