@@ -49,7 +49,6 @@ public class MemcacheService {
 	private static final String MEMCACHE_USERNAME_KEY = "username";
 	private static final String MEMCACHE_VIP_KEY = "vip";
 	private static final String MEMCACHE_SECRET_KEY_KEY = "secret_key";
-	private static final String PLAN_ID_PREFIX = "memcache_";
 	private static final String PLAN_CONFIG_NAME_KEY = "name";
 	private static final String PLAN_CONFIG_DESCRIPTION_KEY = "description";
 	private static final String PLAN_CONFIG_FREE_KEY = "free";
@@ -80,7 +79,7 @@ public class MemcacheService {
 		for(Map.Entry<String, Map<String, Object>> planConfig : planConfigs.entrySet()) {
 			Plan plan = new Plan();
 			plans.add(plan);
-			plan.setId(PLAN_ID_PREFIX+planConfig.getKey());
+			plan.setId(planConfig.getKey());
 			for(Map.Entry<String, Object> planValues : planConfig.getValue().entrySet()) {
 				if(PLAN_CONFIG_NAME_KEY.equals(planValues.getKey())) {
 					plan.setName((String)planValues.getValue());
@@ -157,7 +156,7 @@ public class MemcacheService {
 	}
 
 	private String generateCacheName(String planId, UUID serviceInstanceGuid) {
-		return planId.replace(PLAN_ID_PREFIX, "")+'|'+(serviceInstanceGuid.toString());
+		return planId+'|'+(serviceInstanceGuid.toString());
 	}
 
 	private String generatePassword(String planId, UUID serviceInstanceGuid, UUID appGuid) {
