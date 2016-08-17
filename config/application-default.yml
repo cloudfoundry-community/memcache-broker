@@ -1,0 +1,26 @@
+---
+spring:
+  pid:
+    file: /tmp/memcache-broker.pid
+
+server:
+  port: 8080
+  tomcat:
+    basedir: /tmp/memcache-broker
+
+brokerPassword: password
+
+memcache:
+  srvUrl: https://memcache-hazelcast.cf1-dev.lds.org
+  username: hazelcast-user
+  password: password
+  vip: 10.118.216.239:11211
+  secretKey: secret
+  servers:
+  - 10.118.216.239:11211
+
+plans:
+  small:
+    name: small
+    description: A small cache with no redundency
+    free: false

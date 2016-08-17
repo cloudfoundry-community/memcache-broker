@@ -1,127 +1,122 @@
 package cloudfoundry.memcache.service;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
-import nats.client.Nats;
-import nats.client.spring.NatsBuilder;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-import cf.nats.CfNats;
-import cf.nats.DefaultCfNats;
-import cf.nats.RouterRegisterHandler;
-import cf.spring.CfComponent;
-import cf.spring.NettyEventLoopGroupFactoryBean;
-import cf.spring.PidFileFactory;
-import cf.spring.config.YamlPropertyContextInitializer;
 import cf.spring.servicebroker.EnableServiceBroker;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
 
 /**
  * @author Mike Heath <elcapo@gmail.com>
  */
-@Configuration
-@EnableAutoConfiguration(exclude= {DataSourceAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class})
+@SpringBootApplication
 @EnableServiceBroker(password = "#{environment['brokerPassword']}")
-@ComponentScan("cloudfoundry.memcache.service")
-@CfComponent(type = "AutoScaleServiceBroker", host = "#{environment['host.local']}", port = "#{environment['host.port']}")
 public class Main {
-
-	public static final String TOKEN_PROVIDER_KEY = "TOKEN_PROVIDER";
-	public static final String EMITTER_KEY = "EMITTER";
-	public static final String CLOUD_CONTROLLER_KEY = "CLOUD_CONTROLLER";
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-	
-	@Bean
-	TaskExecutor executor() {
-		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(10);
-		return taskExecutor;
-	}
-
-	@Bean
-	Nats nats(
-			ApplicationEventPublisher publisher,
-			@Value("#{config.nats.machines}") List<String> natsMachines) {
-		final NatsBuilder builder = new NatsBuilder(publisher);
-		builder.eventLoopGroup(workerGroup().getObject());
-		natsMachines.forEach(builder::addHost);
-		return builder.connect();
-	}
-
-	@Bean
-	CfNats cfNats(Nats nats) {
-		return new DefaultCfNats(nats);
-	}
-
-	@Bean
-	@Qualifier("worker")
-	NettyEventLoopGroupFactoryBean workerGroup() {
-		return new NettyEventLoopGroupFactoryBean();
-	}
-
-	@Bean
-	public EmbeddedServletContainerFactory servletContainer(
-			@Value("${host.port}") int port,
-			@Value("#{config['tomcat']?.base_directory}") String baseDirectory
-	) {
-		System.setProperty("java.security.egd", "file:/dev/./urandom");
-		final TomcatEmbeddedServletContainerFactory servletContainerFactory = new TomcatEmbeddedServletContainerFactory(port);
-		if (baseDirectory != null) {
-			servletContainerFactory.setBaseDirectory(new File(baseDirectory));
-		}
-		return servletContainerFactory;
-	}
-
-	@Bean
-	public PidFileFactory pidFile(Environment environment) throws IOException {
-		return new PidFileFactory(environment.getProperty("pidfile"));
-	}
-
-	@Bean
-	RouterRegisterHandler routerRegisterHandler(CfNats cfNats, Environment environment) {
-		return new RouterRegisterHandler(
-				cfNats,
-				environment.getProperty("host.local", "127.0.0.1"),
-				Integer.valueOf(environment.getProperty("host.port", "8080")),
-				environment.getProperty("host.public", "service-broker")
-		);
-	}
 
 	public static void main(String[] args) {
-		final SpringApplication springApplication = new SpringApplication(Main.class);
-		springApplication.addInitializers(new YamlPropertyContextInitializer(
-				"config",
-				"config",
-				"service-broker.yml"));
-		final ApplicationContext applicationContext = springApplication.run(args);
-
-		final LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		final Level level = Level.toLevel(applicationContext.getEnvironment().getProperty("logging.level"), Level.INFO);
-		loggerContext.getLogger("ROOT").setLevel(level);
-
+		SpringApplication.run(Main.class, args);
 		LOGGER.info("Memcache service broker started");
 	}
 
+	@Component
+	@ConfigurationProperties
+	public static class Config {
+		@Valid Memcache memcache;
+		@Valid Map<String, Plan> plans;
+
+		public Memcache getMemcache() {
+			return memcache;
+		}
+		public void setMemcache(Memcache memcache) {
+			this.memcache = memcache;
+		}
+		public Map<String, Plan> getPlans() {
+			return plans;
+		}
+		public void setPlans(Map<String, Plan> plans) {
+			this.plans = plans;
+		}
+
+		public static class Memcache {
+			@NotEmpty String srvUrl;
+			@NotEmpty String username;
+			@NotEmpty String password;
+			String vip;
+			@NotEmpty String secretKey;
+			@NotEmpty List<String> servers;
+
+			public String getSrvUrl() {
+				return srvUrl;
+			}
+			public void setSrvUrl(String srvUrl) {
+				this.srvUrl = srvUrl;
+			}
+			public String getUsername() {
+				return username;
+			}
+			public void setUsername(String username) {
+				this.username = username;
+			}
+			public String getPassword() {
+				return password;
+			}
+			public void setPassword(String password) {
+				this.password = password;
+			}
+			public String getVip() {
+				return vip;
+			}
+			public void setVip(String vip) {
+				this.vip = vip;
+			}
+			public String getSecretKey() {
+				return secretKey;
+			}
+			public void setSecretKey(String secretKey) {
+				this.secretKey = secretKey;
+			}
+			public List<String> getServers() {
+				return servers;
+			}
+			public void setServers(List<String> servers) {
+				this.servers = servers;
+			}
+		}
+
+		public static class Plan {
+			@NotEmpty String name;
+			@NotEmpty String description;
+			@NotNull Boolean free;
+
+			public String getName() {
+				return name;
+			}
+			public void setName(String name) {
+				this.name = name;
+			}
+			public String getDescription() {
+				return description;
+			}
+			public void setDescription(String description) {
+				this.description = description;
+			}
+			public Boolean getFree() {
+				return free;
+			}
+			public void setFree(Boolean free) {
+				this.free = free;
+			}
+		}
+	}
 }
