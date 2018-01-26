@@ -113,8 +113,8 @@ public class MemcacheService {
 		if(config.getMemcache().getVip() != null) {
 			credentials.put(MEMCACHE_VIP_KEY, config.getMemcache().getVip());
 		}
-		credentials.put(MEMCACHE_USERNAME_KEY, generateUsername(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getApplicationGuid()));
-		credentials.put(MEMCACHE_PASSWORD_KEY, generatePassword(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getApplicationGuid()));
+		credentials.put(MEMCACHE_USERNAME_KEY, generateUsername(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getBindingGuid()));
+		credentials.put(MEMCACHE_PASSWORD_KEY, generatePassword(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getBindingGuid()));
 		ArrayNode servers = credentials.arrayNode();
 		for(String server : config.getMemcache().getServers()) {
 			servers.add(server);
@@ -127,16 +127,16 @@ public class MemcacheService {
 	public void unbind(UnbindRequest unbindRequest) {
 	}
 	
-	private String generateUsername(String planId, UUID serviceInstanceGuid, UUID appGuid) {
-		return generateCacheName(planId, serviceInstanceGuid)+'|'+(appGuid.toString());
+	private String generateUsername(String planId, UUID serviceInstanceGuid, UUID bindGuid) {
+		return generateCacheName(planId, serviceInstanceGuid)+'|'+(bindGuid.toString());
 	}
 
 	private String generateCacheName(String planId, UUID serviceInstanceGuid) {
 		return planId+'|'+(serviceInstanceGuid.toString());
 	}
 
-	private String generatePassword(String planId, UUID serviceInstanceGuid, UUID appGuid) {
-		return Base64.encodeBase64String(DigestUtils.sha384((generateUsername(planId, serviceInstanceGuid, appGuid) + config.getMemcache().getSecretKey())));
+	private String generatePassword(String planId, UUID serviceInstanceGuid, UUID bindGuid) {
+		return Base64.encodeBase64String(DigestUtils.sha384((generateUsername(planId, serviceInstanceGuid, bindGuid) + config.getMemcache().getSecretKey())));
 	}
 
 }
