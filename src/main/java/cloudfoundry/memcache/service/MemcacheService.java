@@ -21,6 +21,8 @@ import org.springframework.web.client.RestTemplate;
 
 import cf.spring.servicebroker.Bind;
 import cf.spring.servicebroker.BindRequest;
+import cf.spring.servicebroker.BindRequest.Binding;
+import cf.spring.servicebroker.BindRequest.BindingType;
 import cf.spring.servicebroker.BindResponse;
 import cf.spring.servicebroker.Catalog;
 import cf.spring.servicebroker.Catalog.CatalogService;
@@ -115,11 +117,13 @@ public class MemcacheService {
 		}
 		credentials.put(MEMCACHE_USERNAME_KEY, generateUsername(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getBindingGuid()));
 		credentials.put(MEMCACHE_PASSWORD_KEY, generatePassword(bindRequest.getPlanId(), bindRequest.getServiceInstanceGuid(), bindRequest.getBindingGuid()));
-		ArrayNode servers = credentials.arrayNode();
-		for(String server : config.getMemcache().getServers()) {
-			servers.add(server);
+		if(bindRequest.getBoundResource().getType() == BindingType.APPLICATION || config.getMemcache().getVip() == null) {
+			ArrayNode servers = credentials.arrayNode();
+			for(String server : config.getMemcache().getServers()) {
+				servers.add(server);
+			}
+			credentials.set(MEMCACHE_SERVERS_KEY, servers);
 		}
-		credentials.set(MEMCACHE_SERVERS_KEY, servers);
 		return new BindResponse(credentials);
 	}
 
